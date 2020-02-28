@@ -41,8 +41,7 @@
             view.when(function(){
                // Clone the camera to modify its properties
 var camera = view.camera.clone();
-camera.heading = 0;
-camera.tilt = 75;
+camera.tilt = 10;
 view.camera = camera
                 var request = new XMLHttpRequest()
                 request.open('get', 'https://kiang.github.io/2019-nCoV/data/points/' + todaytxt + '.json', true);
