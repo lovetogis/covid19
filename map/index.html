@@ -39,7 +39,15 @@
             view.ui.components = ["zoom", "compass"];
             document.getElementById("date1").innerText = '目前資料日期：' + todaytxt
             view.when(function(){
-                view.camera.tilt = 20
+               // Clone the camera to modify its properties
+var camera = view.camera.clone();
+
+// Set new values for heading and tilt
+camera.heading = 180;
+camera.tilt = 45;
+
+// Set the new properties on the view's camera
+view.camera = camera
                 var request = new XMLHttpRequest()
                 request.open('get', 'https://kiang.github.io/2019-nCoV/data/points/' + todaytxt + '.json', true);
                 request.send();
