@@ -26,11 +26,7 @@
         var todaytxt = today.getFullYear() + '0' + (today.getMonth() + 1) + (today.getDate() - 1)
         require(["esri/Map", "esri/views/SceneView"], function (Map, SceneView) {
             map = new Map({
-                basemap: {
-                    portalItem: {
-                        id: "8d91bd39e873417ea21673e0fee87604"
-                    }
-                },
+                basemap: "satellite",
                 ground: "world-elevation"
             });
 
@@ -83,29 +79,29 @@
                             var pGraphic
                             var pGraphicT
                             if (fea.properties["Confirmed"] < 10) {
-                                tempcolor = "#00d0ff"
+                                tempcolor = "#1260EE"
                             }
                             else if (fea.properties["Confirmed"] < 50) {
-                                tempcolor = "#00ff8c"
+                                tempcolor = "#11D1D9"
                             }
                             else if (fea.properties["Confirmed"] < 200) {
-                                tempcolor = "#ddff00"
+                                tempcolor = "#06E9A0"
                             }
                             else if (fea.properties["Confirmed"] < 600) {
-                                tempcolor = "#ff9400"
+                                tempcolor = "#FFD166"
                             }
                             else if (fea.properties["Confirmed"] < 1200) {
-                                tempcolor = "#ff2020"
+                                tempcolor = "#FF703B"
                             }
                             else if (fea.properties["Confirmed"] >= 1200) {
-                                tempcolor = "#ee0888"
+                                tempcolor = "#FF3B4C"
                             }
                             if (fea.geometry.type === "Point") {
                                 geotype = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], spatialReference: new SpatialReference(4326) };
                                 var objectSymbol = new PointSymbol3D({
                                     symbolLayers: [new ObjectSymbol3DLayer({
-                                        width: 123456 + fea.properties["Confirmed"],
-                                        height: Math.sqrt(fea.properties["Confirmed"] * 123456789) + 1234,
+                                        width: 43210 + fea.properties["Confirmed"] * 2,
+                                        height: Math.sqrt(fea.properties["Confirmed"] * 123456789) + 2500,
                                         resource: {
                                             primitive: "cone" //inverted-cone cylinder
                                         },
@@ -132,11 +128,13 @@
                                     ctx = fea.properties["Country/Region"]
                                 } else if (fea.properties["Country/Region"] === "China") {
                                     ctx = fea.properties["Province/State"]
+                                } else if (fea.properties["Country/Region"] === "US") {
+                                    ctx = fea.properties["Province/State"]
                                 } else {
                                     ctx = fea.properties["Country/Region"]
                                 }
-                                var txtsymbol = GetTextSymbol(tempcolor, ctx + "確診:" + fea.properties["Confirmed"] + '\n' + "死亡/痊癒:" + fea.properties["Deaths"] + '/' + fea.properties["Recovered"], [0, 0, 0, 1], 1, 0, -3, 8, 'sans-serif', 'bold')
-                                geotypeT = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], z: Math.sqrt(fea.properties["Confirmed"] * 123456789) +1250, spatialReference: new SpatialReference(4326) };
+                                var txtsymbol = GetTextSymbol(tempcolor, ctx + '\n' + fea.properties["Confirmed"] + "\n" + fea.properties["Deaths"] + "\n" + fea.properties["Recovered"], [25, 25, 25, 1], 1, 0, -3, 8, 'sans-serif', 'bold')
+                                geotypeT = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], z: Math.sqrt(fea.properties["Confirmed"] * 123456789) + 2500, spatialReference: new SpatialReference(4326) };
                                 pGraphicT = new Graphic({
                                     geometry: geotypeT,
                                     symbol: txtsymbol
@@ -226,29 +224,29 @@
                                 var pGraphic
                                 var pGraphicT
                                 if (fea.properties["Confirmed"] < 10) {
-                                    tempcolor = "#00d0ff"
+                                    tempcolor = "#1260EE"
                                 }
                                 else if (fea.properties["Confirmed"] < 50) {
-                                    tempcolor = "#00ff8c"
+                                    tempcolor = "#11D1D9"
                                 }
                                 else if (fea.properties["Confirmed"] < 200) {
-                                    tempcolor = "#ddff00"
+                                    tempcolor = "#06E9A0"
                                 }
                                 else if (fea.properties["Confirmed"] < 600) {
-                                    tempcolor = "#ff9400"
+                                    tempcolor = "#FFD166"
                                 }
                                 else if (fea.properties["Confirmed"] < 1200) {
-                                    tempcolor = "#ff2020"
+                                    tempcolor = "#FF703B"
                                 }
                                 else if (fea.properties["Confirmed"] >= 1200) {
-                                    tempcolor = "#ee0888"
+                                    tempcolor = "#FF3B4C"
                                 }
                                 if (fea.geometry.type === "Point") {
                                     geotype = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], spatialReference: new SpatialReference(4326) };
                                     var objectSymbol = new PointSymbol3D({
                                         symbolLayers: [new ObjectSymbol3DLayer({
-                                            width: 123456 + fea.properties["Confirmed"],
-                                            height: Math.sqrt(fea.properties["Confirmed"] * 123456789) + 1234,
+                                            width: 43210 + fea.properties["Confirmed"]*2,
+                                            height: Math.sqrt(fea.properties["Confirmed"] * 12345678) + 9000,
                                             resource: {
                                                 primitive: "cone" //inverted-cone cylinder
                                             },
@@ -275,11 +273,13 @@
                                         ctx = fea.properties["Country/Region"]
                                     } else if (fea.properties["Country/Region"] === "China") {
                                         ctx = fea.properties["Province/State"]
+                                    } else if (fea.properties["Country/Region"] === "US") {
+                                        ctx = fea.properties["Province/State"]
                                     } else {
                                         ctx = fea.properties["Country/Region"]
                                     }
-                                    var txtsymbol = GetTextSymbol(tempcolor, ctx + "確診:" + fea.properties["Confirmed"] + '\n' + "死亡/痊癒:" + fea.properties["Deaths"] + '/' + fea.properties["Recovered"], [0, 0, 0, 1], 1, 0, -3, 8, 'sans-serif', 'bold')
-                                    geotypeT = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], z: Math.sqrt(fea.properties["Confirmed"] * 123456789) + 1250, spatialReference: new SpatialReference(4326) };
+                                    var txtsymbol = GetTextSymbol(tempcolor, ctx + '\n' + fea.properties["Confirmed"] + "\n" + fea.properties["Deaths"] + "\n" + fea.properties["Recovered"], [20, 20, 20, 1], 1, 0, -3, 8, 'sans-serif', 'bold')
+                                    geotypeT = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], z: Math.sqrt(fea.properties["Confirmed"] * 12345678) + 9000, spatialReference: new SpatialReference(4326) };
                                     pGraphicT = new Graphic({
                                         geometry: geotypeT,
                                         symbol: txtsymbol
@@ -301,9 +301,11 @@
 </head>
 <body>
     <div id="viewDiv"></div>
-    <p style="position:absolute;top:7px;left:64px;z-index:2;color:white;font-weight:400">2019-nCoV</p>
-    <p id="date1" style="position:absolute;top:30px;left:64px;z-index:2;color:white;font-size:smaller">today</p>
-    <button style="position:absolute;top:20px;left:144px;z-index:2;" onclick="changedate(-1)">前一天</button>
-    <button style="position:absolute;top:20px;left:204px;z-index:2;" onclick="changedate(1)">後一天</button>
+    <div style="background-color:#12345678;position:absolute;top:16px;left:60px;width:208px;height:65px;">
+        <p style="position:absolute;top:0px;left:5px;z-index:2;color:white;">COVID-19</p>
+        <p id="date1" style="position:absolute;top:28px;left:5px;z-index:2;color:white;font-size:smaller">today</p>
+        <button style="position:absolute;top:10px;left:84px;z-index:2;" onclick="changedate(-1)">前一天</button>
+        <button style="position:absolute;top:10px;left:144px;z-index:2;" onclick="changedate(1)">後一天</button>
+    </div>
 </body>
 </html>
