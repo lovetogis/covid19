@@ -33,14 +33,14 @@
             view = new SceneView({
                 container: "viewDiv",
                 map: map,
-                scale: 3210000,
+                scale: 9870000,
                 center: [121, 25]
             });
             view.ui.components = ["zoom", "compass"];
             document.getElementById("date1").innerText = '目前資料日期：' + todaytxt
             view.when(function(){
 var camera = view.camera.clone();
-camera.tilt = 45;
+camera.tilt = 60;
 view.camera = camera
                 var request = new XMLHttpRequest()
                 request.open('get', 'https://kiang.github.io/2019-nCoV/data/points/' + todaytxt + '.json', true);
