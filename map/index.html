@@ -101,7 +101,7 @@
                                 var objectSymbol = new PointSymbol3D({
                                     symbolLayers: [new ObjectSymbol3DLayer({
                                         width: 43210 + fea.properties["Confirmed"] * 2,
-                                        height: Math.sqrt(fea.properties["Confirmed"] * 123456789) + 2500,
+                                        height: (Math.sqrt(fea.properties["Confirmed"] * 12345678) + 9000) * 0.8,
                                         resource: {
                                             primitive: "cone" //inverted-cone cylinder
                                         },
@@ -134,7 +134,7 @@
                                     ctx = fea.properties["Country/Region"]
                                 }
                                 var txtsymbol = GetTextSymbol(tempcolor, ctx + '\n' + fea.properties["Confirmed"] + "\n" + fea.properties["Deaths"] + "\n" + fea.properties["Recovered"], [25, 25, 25, 1], 1, 0, -3, 8, 'sans-serif', 'bold')
-                                geotypeT = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], z: Math.sqrt(fea.properties["Confirmed"] * 123456789) + 2500, spatialReference: new SpatialReference(4326) };
+                                geotypeT = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], z: (Math.sqrt(fea.properties["Confirmed"] * 12345678) + 9000) * 0.8, spatialReference: new SpatialReference(4326) };
                                 pGraphicT = new Graphic({
                                     geometry: geotypeT,
                                     symbol: txtsymbol
@@ -245,8 +245,8 @@
                                     geotype = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], spatialReference: new SpatialReference(4326) };
                                     var objectSymbol = new PointSymbol3D({
                                         symbolLayers: [new ObjectSymbol3DLayer({
-                                            width: 43210 + fea.properties["Confirmed"]*2,
-                                            height: Math.sqrt(fea.properties["Confirmed"] * 12345678) + 9000,
+                                            width: 43210 + fea.properties["Confirmed"] * 2,
+                                            height: (Math.sqrt(fea.properties["Confirmed"] * 12345678) + 9000)*0.8,
                                             resource: {
                                                 primitive: "cone" //inverted-cone cylinder
                                             },
@@ -279,7 +279,7 @@
                                         ctx = fea.properties["Country/Region"]
                                     }
                                     var txtsymbol = GetTextSymbol(tempcolor, ctx + '\n' + fea.properties["Confirmed"] + "\n" + fea.properties["Deaths"] + "\n" + fea.properties["Recovered"], [20, 20, 20, 1], 1, 0, -3, 8, 'sans-serif', 'bold')
-                                    geotypeT = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], z: Math.sqrt(fea.properties["Confirmed"] * 12345678) + 9000, spatialReference: new SpatialReference(4326) };
+                                    geotypeT = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], z: (Math.sqrt(fea.properties["Confirmed"] * 12345678) + 9000) * 0.8, spatialReference: new SpatialReference(4326) };
                                     pGraphicT = new Graphic({
                                         geometry: geotypeT,
                                         symbol: txtsymbol
