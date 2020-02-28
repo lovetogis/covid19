@@ -1,10 +1,309 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Hello</title>
+    <meta charset="utf-8" />
+    <meta name="viewport"
+          content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>2019-nCoV</title>
+    <style>
+
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+    <link rel="stylesheet"
+          href="https://js.arcgis.com/4.14/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.14/"></script>
+    <script>
+        var map;
+        var view;
+        var today = new Date()
+        var todaytxt = today.getFullYear() + '0' + (today.getMonth() + 1) + (today.getDate() - 1)
+        require(["esri/Map", "esri/views/SceneView"], function (Map, SceneView) {
+            map = new Map({
+                basemap: {
+                    portalItem: {
+                        id: "8d91bd39e873417ea21673e0fee87604"
+                    }
+                },
+                ground: "world-elevation"
+            });
+
+            view = new SceneView({
+                container: "viewDiv",
+                map: map,
+                scale: 32100000,
+                center: [121, 25]
+            });
+            view.ui.components = ["zoom", "compass"];
+            document.getElementById("date1").innerText = '目前資料日期：' + todaytxt
+            view.when(function(){
+                var request = new XMLHttpRequest()
+                request.open('get', 'https://kiang.github.io/2019-nCoV/data/points/' + todaytxt + '.json', true);
+                request.send();
+                request.onload = reqOnload; 
+                request.onerror = reqError;
+                function reqOnload() {
+                    obj = JSON.parse(this.responseText);
+                    gjfeadatas = obj.features;
+                    fid = 0;
+                    require(["esri/Graphic",
+                        "esri/symbols/PointSymbol3D",
+                        "esri/symbols/ObjectSymbol3DLayer",
+                        "esri/layers/GraphicsLayer",
+                        "esri/geometry/SpatialReference"], function (Graphic, PointSymbol3D, ObjectSymbol3DLayer, GraphicsLayer, SpatialReference) {
+                        var finfo = [];
+                        finfo.push({ fieldName: "Country/Region", label: "國別" });
+                        finfo.push({ fieldName: "Province/State", label: "地區"});
+                        finfo.push({ fieldName: "Last Update", label: "最後更新"});
+                        finfo.push({ fieldName: "Confirmed", label: "確診"});
+                        finfo.push({ fieldName: "Deaths", label: "死亡"});
+                        finfo.push({ fieldName: "Recovered", label: "痊癒"});
+                        var template = {
+                            title: "2019-nCoV",
+                            position: "top-center",
+                            content: [{
+                                type: "fields",
+                                fieldInfos: finfo
+                            }],
+                        };
+                        var GraLyr = new GraphicsLayer();
+                        GraLyr.title = "疫情地圖-2019-nCoV";
+                        var GraLyrT = new GraphicsLayer();
+                        GraLyrT.title = "疫情地圖-TEXT";
+                        gjfeadatas.forEach(function (fea, key) {
+                            fid = fid + 1;
+                            var geotype;
+                            var geotypeT;
+                            var pGraphic
+                            var pGraphicT
+                            if (fea.properties["Confirmed"] < 10) {
+                                tempcolor = "#00d0ff"
+                            }
+                            else if (fea.properties["Confirmed"] < 50) {
+                                tempcolor = "#00ff8c"
+                            }
+                            else if (fea.properties["Confirmed"] < 200) {
+                                tempcolor = "#ddff00"
+                            }
+                            else if (fea.properties["Confirmed"] < 600) {
+                                tempcolor = "#ff9400"
+                            }
+                            else if (fea.properties["Confirmed"] < 1200) {
+                                tempcolor = "#ff2020"
+                            }
+                            else if (fea.properties["Confirmed"] >= 1200) {
+                                tempcolor = "#ee0888"
+                            }
+                            if (fea.geometry.type === "Point") {
+                                geotype = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], spatialReference: new SpatialReference(4326) };
+                                var objectSymbol = new PointSymbol3D({
+                                    symbolLayers: [new ObjectSymbol3DLayer({
+                                        width: 123456 + fea.properties["Confirmed"],
+                                        height: Math.sqrt(fea.properties["Confirmed"] * 123456789) + 1234,
+                                        resource: {
+                                            primitive: "cone" //inverted-cone cylinder
+                                        },
+                                        material: {
+                                            color: tempcolor
+                                        }
+                                    })]
+                                });
+                                pGraphic = new Graphic({
+                                    geometry: geotype,
+                                    symbol: objectSymbol
+                                });
+                                pGraphic.setAttribute("ObjectID", fid)
+                                pGraphic.setAttribute("Province/State", fea.properties["Province/State"])
+                                pGraphic.setAttribute("Country/Region", fea.properties["Country/Region"])
+                                pGraphic.setAttribute("Last Update", fea.properties["Last Update"])
+                                pGraphic.setAttribute("Confirmed", fea.properties["Confirmed"])
+                                pGraphic.setAttribute("Deaths", fea.properties["Deaths"])
+                                pGraphic.setAttribute("Recovered", fea.properties["Recovered"])
+                                pGraphic.popupTemplate = template;
+                                GraLyr.add(pGraphic);
+                                var ctx = ""
+                                if (fea.properties["Country/Region"] === fea.properties["Province/State"]) {
+                                    ctx = fea.properties["Country/Region"]
+                                } else if (fea.properties["Country/Region"] === "China") {
+                                    ctx = fea.properties["Province/State"]
+                                } else {
+                                    ctx = fea.properties["Country/Region"]
+                                }
+                                var txtsymbol = GetTextSymbol(tempcolor, ctx + "確診:" + fea.properties["Confirmed"] + '\n' + "死亡/痊癒:" + fea.properties["Deaths"] + '/' + fea.properties["Recovered"], [0, 0, 0, 1], 1, 0, -3, 8, 'sans-serif', 'bold')
+                                geotypeT = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], z: Math.sqrt(fea.properties["Confirmed"] * 123456789) +1250, spatialReference: new SpatialReference(4326) };
+                                pGraphicT = new Graphic({
+                                    geometry: geotypeT,
+                                    symbol: txtsymbol
+                                });
+                                GraLyrT.add(pGraphicT);
+                            }
+                        });
+                        GraLyr.opacity = 0.7
+                        map.add(GraLyr);
+                        map.add(GraLyrT);
+                    });
+                }
+                function reqError(err) {
+                    console.log('原頭資料錯誤，請確認', err)
+                }
+            })
+        });
+        function GetTextSymbol(p_color, p_text, p_halocolor, p_halosize, p_xoffset, p_yoffset, p_size, p_family, p_weight) {
+            return {
+                type: 'text',
+                color: p_color,
+                text: p_text,
+                haloColor: p_halocolor,
+                haloSize: p_halosize,
+                xoffset: p_xoffset,
+                yoffset: p_yoffset,
+                font: {
+                    size: p_size,
+                    family: p_family,
+                    weight: p_weight
+                }
+            };
+        };
+        function changedate(ud) {
+            var request = new XMLHttpRequest()
+            today.setDate(today.getDate() + ud);
+            var checkd = new Date();
+            if (checkd.getDate() === today.getDate() - 1 && checkd.getMonth() === today.getMonth()) {
+                alert("已是最新資料")
+            }
+            else {
+                map.layers.removeAll();
+                var todaytxt
+                if (today.getDate() < 11) {
+                    todaytxt = today.getFullYear() + '0' + (today.getMonth() + 1) + '0' + (today.getDate() - 1)
+                }
+                else {
+                    todaytxt = today.getFullYear() + '0' + (today.getMonth() + 1) + (today.getDate() - 1)
+                }
+                document.getElementById("date1").innerText = '目前資料日期：' + todaytxt
+                request.open('get', 'https://kiang.github.io/2019-nCoV/data/points/' + todaytxt + '.json', true);
+                request.send();
+                request.onload = reqOnload;
+                request.onerror = reqError;
+                function reqOnload() {
+                    obj = JSON.parse(this.responseText);
+                    gjfeadatas = obj.features;
+                    fid = 0;
+                    require(["esri/Graphic",
+                        "esri/symbols/PointSymbol3D",
+                        "esri/symbols/ObjectSymbol3DLayer",
+                        "esri/layers/GraphicsLayer",
+                        "esri/geometry/SpatialReference"], function (Graphic, PointSymbol3D, ObjectSymbol3DLayer, GraphicsLayer, SpatialReference) {
+                            var finfo = [];
+                            finfo.push({ fieldName: "Country/Region", label: "國別" });
+                            finfo.push({ fieldName: "Province/State", label: "地區" });
+                            finfo.push({ fieldName: "Last Update", label: "最後更新" });
+                            finfo.push({ fieldName: "Confirmed", label: "確診" });
+                            finfo.push({ fieldName: "Deaths", label: "死亡" });
+                            finfo.push({ fieldName: "Recovered", label: "痊癒" });
+                            var template = {
+                                title: "2019-nCoV",
+                                position: "top-center",
+                                content: [{
+                                    type: "fields",
+                                    fieldInfos: finfo
+                                }],
+                            };
+                            var GraLyr = new GraphicsLayer();
+                            GraLyr.title = "疫情地圖-2019-nCoV";
+                            var GraLyrT = new GraphicsLayer();
+                            GraLyrT.title = "疫情地圖-TEXT";
+                            gjfeadatas.forEach(function (fea, key) {
+                                fid = fid + 1;
+                                var geotype;
+                                var geotypeT;
+                                var pGraphic
+                                var pGraphicT
+                                if (fea.properties["Confirmed"] < 10) {
+                                    tempcolor = "#00d0ff"
+                                }
+                                else if (fea.properties["Confirmed"] < 50) {
+                                    tempcolor = "#00ff8c"
+                                }
+                                else if (fea.properties["Confirmed"] < 200) {
+                                    tempcolor = "#ddff00"
+                                }
+                                else if (fea.properties["Confirmed"] < 600) {
+                                    tempcolor = "#ff9400"
+                                }
+                                else if (fea.properties["Confirmed"] < 1200) {
+                                    tempcolor = "#ff2020"
+                                }
+                                else if (fea.properties["Confirmed"] >= 1200) {
+                                    tempcolor = "#ee0888"
+                                }
+                                if (fea.geometry.type === "Point") {
+                                    geotype = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], spatialReference: new SpatialReference(4326) };
+                                    var objectSymbol = new PointSymbol3D({
+                                        symbolLayers: [new ObjectSymbol3DLayer({
+                                            width: 123456 + fea.properties["Confirmed"],
+                                            height: Math.sqrt(fea.properties["Confirmed"] * 123456789) + 1234,
+                                            resource: {
+                                                primitive: "cone" //inverted-cone cylinder
+                                            },
+                                            material: {
+                                                color: tempcolor
+                                            }
+                                        })]
+                                    });
+                                    pGraphic = new Graphic({
+                                        geometry: geotype,
+                                        symbol: objectSymbol
+                                    });
+                                    pGraphic.setAttribute("ObjectID", fid)
+                                    pGraphic.setAttribute("Province/State", fea.properties["Province/State"])
+                                    pGraphic.setAttribute("Country/Region", fea.properties["Country/Region"])
+                                    pGraphic.setAttribute("Last Update", fea.properties["Last Update"])
+                                    pGraphic.setAttribute("Confirmed", fea.properties["Confirmed"])
+                                    pGraphic.setAttribute("Deaths", fea.properties["Deaths"])
+                                    pGraphic.setAttribute("Recovered", fea.properties["Recovered"])
+                                    pGraphic.popupTemplate = template;
+                                    GraLyr.add(pGraphic);
+                                    var ctx = ""
+                                    if (fea.properties["Country/Region"] === fea.properties["Province/State"]) {
+                                        ctx = fea.properties["Country/Region"]
+                                    } else if (fea.properties["Country/Region"] === "China") {
+                                        ctx = fea.properties["Province/State"]
+                                    } else {
+                                        ctx = fea.properties["Country/Region"]
+                                    }
+                                    var txtsymbol = GetTextSymbol(tempcolor, ctx + "確診:" + fea.properties["Confirmed"] + '\n' + "死亡/痊癒:" + fea.properties["Deaths"] + '/' + fea.properties["Recovered"], [0, 0, 0, 1], 1, 0, -3, 8, 'sans-serif', 'bold')
+                                    geotypeT = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], z: Math.sqrt(fea.properties["Confirmed"] * 123456789) + 1250, spatialReference: new SpatialReference(4326) };
+                                    pGraphicT = new Graphic({
+                                        geometry: geotypeT,
+                                        symbol: txtsymbol
+                                    });
+                                    GraLyrT.add(pGraphicT);
+                                }
+                            });
+                            GraLyr.opacity = 0.7
+                            map.add(GraLyr);
+                            map.add(GraLyrT);
+                        });
+                }
+                function reqError(err) {
+                    console.log('源頭資料錯誤，請確認', err)
+                }
+            }
+        }
+    </script>
 </head>
 <body>
-    Hi~大家好
+    <div id="viewDiv"></div>
+    <p style="position:absolute;top:7px;left:64px;z-index:2;color:white;font-weight:400">2019-nCoV</p>
+    <p id="date1" style="position:absolute;top:30px;left:64px;z-index:2;color:white;font-size:smaller">today</p>
+    <button style="position:absolute;top:20px;left:144px;z-index:2;" onclick="changedate(-1)">前一天</button>
+    <button style="position:absolute;top:20px;left:204px;z-index:2;" onclick="changedate(1)">後一天</button>
 </body>
 </html>
