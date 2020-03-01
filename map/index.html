@@ -65,6 +65,7 @@
             };
         };
         function changedate(ud) {
+            document.getElementById("note1").innerText = '3組數據是確診/死亡/痊癒'
             var request = new XMLHttpRequest()
             today.setDate(today.getDate() + ud);
             todayY = today.getFullYear();
@@ -193,6 +194,7 @@
         }
         var gjfeadatas3d
         function analysis3date() {
+            document.getElementById("note1").innerText = '(趨勢%比較能反應傳播速度)'
             var request = new XMLHttpRequest()
             var b3day = new Date();
             b3day.setDate(b3day.getDate() + udnow - 3);
@@ -315,7 +317,7 @@
         <button style="position:absolute;top:10px;left:84px;z-index:2;" onclick="changedate(-1)">前一天</button>
         <button style="position:absolute;top:10px;left:144px;z-index:2;" onclick="changedate(1)">後一天</button>
         <button style="position:absolute;top:37px;left:123px;z-index:2;" onclick="analysis3date()">近3日趨勢</button>
-        <p id="note2" style="position:absolute;top:60px;left:5px;z-index:2;color:white;font-size:smaller">3組數據是確診/死亡/痊癒，這是一個arcgis JS api練習，數據借用了https://kiang.github.io/2019-nCoV/，切換日期可看總量累積，近3日趨勢可看漲跌%</p>
+        <p id="note1" style="position:absolute;top:60px;left:5px;z-index:2;color:white;font-size:smaller">3組數據是確診/死亡/痊癒，這是一個arcgis JS api練習，數據借用了https://kiang.github.io/2019-nCoV/，切換日期可看總量累積，近3日趨勢可看漲跌%</p>
     </div>
 </body>
 </html>
