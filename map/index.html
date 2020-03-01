@@ -28,6 +28,8 @@
         var todayD = (today.getDate() + 100).toString().substring(1, 3)
         var todaytxt = todayY + todayM + todayD
         var checkday = todaytxt
+        var gjfeadatas
+        var udnow=0
         require(["esri/Map", "esri/views/SceneView"], function (Map, SceneView) {
             map = new Map({
                 basemap: "satellite",
@@ -70,12 +72,14 @@
             todayD = (today.getDate() + 100).toString().substring(1, 3)
             todaytxt = todayY + todayM + todayD
             if (checkday === todaytxt) {
-                alert('已是最新資料')
+                alert('每日的上午9點會更新前一日的全球數據。')
                 today = new Date();
+                today.setDate(today.getDate() - 3);
             }
             else {
+                udnow = udnow + ud
                 map.layers.removeAll();
-                document.getElementById("date1").innerText = '目前資料日期：' + todaytxt
+                document.getElementById("date1").innerText = '目前日期:' + todaytxt
                 request.open('get', 'https://kiang.github.io/2019-nCoV/data/points/' + todaytxt + '.json', true);
                 request.send();
                 request.onload = reqOnload;
@@ -97,7 +101,7 @@
                         finfo.push({ fieldName: "Deaths", label: "死亡" });
                         finfo.push({ fieldName: "Recovered", label: "痊癒" });
                         var template = {
-                            title: "2019-nCoV",
+                            title: "COVID-19",
                             position: "top-center",
                             content: [{
                                 type: "fields",
@@ -105,7 +109,7 @@
                             }],
                         };
                         var GraLyr = new GraphicsLayer();
-                        GraLyr.title = "疫情地圖-2019-nCoV";
+                        GraLyr.title = "疫情地圖-COVID-19";
                         var GraLyrT = new GraphicsLayer();
                         GraLyrT.title = "疫情地圖-TEXT";
                         gjfeadatas.forEach(function (fea, key) {
@@ -115,7 +119,7 @@
                             var pGraphic
                             var pGraphicT
                             if (fea.properties["Confirmed"] < 10) {
-                                tempcolor = "#1260EE"
+                                tempcolor = "#1872FF"
                             }
                             else if (fea.properties["Confirmed"] < 50) {
                                 tempcolor = "#11D1D9"
@@ -166,15 +170,133 @@
                                     ctx = fea.properties["Province/State"]
                                 } else if (fea.properties["Country/Region"] === "US") {
                                     ctx = fea.properties["Province/State"]
+                                } else if (fea.properties["Country/Region"] === "Australia") {
+                                    ctx = fea.properties["Province/State"]
                                 } else {
                                     ctx = fea.properties["Country/Region"]
                                 }
-                                var txtsymbol = GetTextSymbol(tempcolor, ctx + '\n' + fea.properties["Confirmed"] + "\n" + fea.properties["Deaths"] + "\n" + fea.properties["Recovered"], [20, 20, 20, 1], 1, 0, -3, 8, 'sans-serif', 'bold')
+                                var txtsymbol = GetTextSymbol(tempcolor, ctx + '\n' + fea.properties["Confirmed"] + "\n" + fea.properties["Deaths"] + "\n" + fea.properties["Recovered"], [20, 20, 20, 1], 1, 0, -3, 8.5, 'sans-serif', 'bold')
                                 geotypeT = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], z: (Math.sqrt(fea.properties["Confirmed"] * 12345678) + 9000) * 0.8, spatialReference: new SpatialReference(4326) };
+                                pGraphicT = new Graphic({
+                                    geometry: geotypeT,
+                                    attributes: pGraphic.attributes,
+                                    symbol: txtsymbol
+                                });
+                                pGraphicT.popupTemplate = template;
+                                GraLyrT.add(pGraphicT);
+                            }
+                        });
+                        GraLyr.opacity = 0.7
+                        map.add(GraLyr);
+                        map.add(GraLyrT);
+                    });
+            }
+        }
+        var gjfeadatas3d
+        function analysis3date() {
+            var request = new XMLHttpRequest()
+            var b3day = new Date();
+            b3day.setDate(b3day.getDate() + udnow - 3);
+            b3dayY = b3day.getFullYear();
+            b3dayM = (b3day.getMonth() + 1 + 100).toString().substring(1, 3);
+            b3dayD = (b3day.getDate() + 100).toString().substring(1, 3)
+            b3daytxt = b3dayY + b3dayM + b3dayD
+            request.open('get', 'https://kiang.github.io/2019-nCoV/data/points/' + b3daytxt + '.json', true);
+            request.send();
+            request.onload = reqOnload3d;
+            function reqOnload3d() {
+                obj = JSON.parse(this.responseText);
+                gjfeadatas3d = obj.features;
+                fid = 0;
+                require(["esri/Graphic",
+                    "esri/symbols/PointSymbol3D",
+                    "esri/symbols/ObjectSymbol3DLayer",
+                    "esri/layers/GraphicsLayer",
+                    "esri/geometry/SpatialReference"], function (Graphic, PointSymbol3D, ObjectSymbol3DLayer, GraphicsLayer, SpatialReference) {
+                        var finfo = [];
+                        finfo.push({ fieldName: "Country/Region", label: "國別" });
+                        finfo.push({ fieldName: "Province/State", label: "地區" });
+                        finfo.push({ fieldName: "Confirmed", label: "確診增加%" });
+                        finfo.push({ fieldName: "Deaths", label: "死亡增加%" });
+                        finfo.push({ fieldName: "Recovered", label: "痊癒增加%" });
+                        var template = {
+                            title: "COVID-19近三日漲幅",
+                            position: "top-center",
+                            content: [{
+                                type: "fields",
+                                fieldInfos: finfo
+                            }],
+                        };
+                        var GraLyr = new GraphicsLayer();
+                        GraLyr.title = "疫情地圖-COVID-19";
+                        var GraLyrT = new GraphicsLayer();
+                        GraLyrT.title = "疫情地圖-TEXT";
+                        gjfeadatas3d.forEach(function (fea, key) {
+                            gjfeadatas.forEach(function (fea0, key0) {
+                                if (fea.properties["Country/Region"] === fea0.properties["Country/Region"] && fea.properties["Province/State"] === fea0.properties["Province/State"]) {
+                                    fea.properties["Last Update"] = fea0.properties["Confirmed"]
+                                    fea.properties["Confirmed"] = parseInt((fea0.properties["Confirmed"] - fea.properties["Confirmed"]) / fea.properties["Confirmed"] * 100)
+                                    if (fea.properties["Deaths"] !== 0) {
+                                        fea.properties["Deaths"] = parseInt((fea0.properties["Deaths"] - fea.properties["Deaths"]) / fea.properties["Deaths"] * 100)
+                                    }
+                                    if (fea.properties["Recovered"] !== 0) {
+                                        fea.properties["Recovered"] = parseInt((fea0.properties["Recovered"] - fea.properties["Recovered"]) / fea.properties["Recovered"] * 100)
+                                    }
+                                }
+                            });
+                        });
+                        gjfeadatas3d.forEach(function (fea, key) {
+                            fid = fid + 1;
+                            var geotype;
+                            var geotypeT;
+                            var pGraphic
+                            var pGraphicT
+                            if (fea.properties["Confirmed"] < 5) {
+                                tempcolor = "#1872FF"
+                            }
+                            else if (fea.properties["Confirmed"] < 10) {
+                                tempcolor = "#11D1D9"
+                            }
+                            else if (fea.properties["Confirmed"] < 25) {
+                                tempcolor = "#06E9A0"
+                            }
+                            else if (fea.properties["Confirmed"] < 50) {
+                                tempcolor = "#FFD166"
+                            }
+                            else if (fea.properties["Confirmed"] < 100) {
+                                tempcolor = "#FF703B"
+                            }
+                            else if (fea.properties["Confirmed"] >= 100) {
+                                tempcolor = "#FF3B4C"
+                            }
+                            if (fea.geometry.type === "Point") {
+                                geotype = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], spatialReference: new SpatialReference(4326) };
+                                var ctx = ""
+                                if (fea.properties["Country/Region"] === fea.properties["Province/State"]) {
+                                    ctx = fea.properties["Country/Region"]
+                                } else if (fea.properties["Country/Region"] === "China") {
+                                    ctx = fea.properties["Province/State"]
+                                } else if (fea.properties["Country/Region"] === "US") {
+                                    ctx = fea.properties["Province/State"]
+                                } else if (fea.properties["Country/Region"] === "Australia") {
+                                    ctx = fea.properties["Province/State"]
+                                } else {
+                                    ctx = fea.properties["Country/Region"]
+                                }
+                                var txtsymbol = GetTextSymbol(tempcolor, "　　　　" + '\n　　　　+' + fea.properties["Confirmed"] + "%\n　　　　+" + fea.properties["Deaths"] + "%\n　　　　+" + fea.properties["Recovered"] + "%", [20, 20, 20, 1], 1, 20, -3, 8.5, 'sans-serif', 'bold')
+                                geotypeT = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], z: (Math.sqrt(fea.properties["Last Update"] * 12345678) + 9000) * 0.8, spatialReference: new SpatialReference(4326) };
                                 pGraphicT = new Graphic({
                                     geometry: geotypeT,
                                     symbol: txtsymbol
                                 });
+                                pGraphicT.setAttribute("ObjectID", fid)
+                                pGraphicT.setAttribute("Province/State", fea.properties["Province/State"])
+                                pGraphicT.setAttribute("Country/Region", fea.properties["Country/Region"])
+                                pGraphicT.setAttribute("Last Update", fea.properties["Last Update"])
+                                pGraphicT.setAttribute("Confirmed", fea.properties["Confirmed"])
+                                pGraphicT.setAttribute("Deaths", fea.properties["Deaths"])
+                                pGraphicT.setAttribute("Recovered", fea.properties["Recovered"])
+                                pGraphicT.popupTemplate = template;
                                 GraLyrT.add(pGraphicT);
                             }
                         });
@@ -189,10 +311,11 @@
 <body>
     <div id="viewDiv"></div>
     <div style="background-color:#12345678;position:absolute;top:16px;left:60px;width:208px;height:65px;">
-        <p style="position:absolute;top:0px;left:5px;z-index:2;color:white;">COVID-19</p>
+        <p style="position:absolute;top:0px;left:5px;z-index:2;color:white;margin-top: 12px;">COVID-19</p>
         <p id="date1" style="position:absolute;top:28px;left:5px;z-index:2;color:white;font-size:smaller">today</p>
         <button style="position:absolute;top:10px;left:84px;z-index:2;" onclick="changedate(-1)">前一天</button>
         <button style="position:absolute;top:10px;left:144px;z-index:2;" onclick="changedate(1)">後一天</button>
+        <button style="position:absolute;top:36px;left:123px;z-index:2;" onclick="analysis3date()">近3日趨勢</button>
     </div>
 </body>
 </html>
