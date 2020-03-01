@@ -23,7 +23,11 @@
         var map;
         var view;
         var today = new Date()
-        var todaytxt = today.getFullYear() + '0' + (today.getMonth() + 1) + (today.getDate() - 1)
+        var todayY = today.getFullYear();
+        var todayM = (today.getMonth() + 1 + 100).toString().substring(1, 3);
+        var todayD = (today.getDate() + 100).toString().substring(1, 3)
+        var todaytxt = todayY + todayM + todayD
+        var checkday = todaytxt
         require(["esri/Map", "esri/views/SceneView"], function (Map, SceneView) {
             map = new Map({
                 basemap: "satellite",
@@ -33,36 +37,65 @@
             view = new SceneView({
                 container: "viewDiv",
                 map: map,
-                scale: 9870000,
+                scale: 32100000,
                 center: [121, 25]
             });
             view.ui.components = ["zoom", "compass"];
             document.getElementById("date1").innerText = '目前資料日期：' + todaytxt
-            view.when(function(){
-var camera = view.camera.clone();
-camera.tilt = 20;
-view.camera = camera
-                var request = new XMLHttpRequest()
+            view.when(function () {
+                changedate(-1)
+            })
+        });
+        function GetTextSymbol(p_color, p_text, p_halocolor, p_halosize, p_xoffset, p_yoffset, p_size, p_family, p_weight) {
+            return {
+                type: 'text',
+                color: p_color,
+                text: p_text,
+                haloColor: p_halocolor,
+                haloSize: p_halosize,
+                xoffset: p_xoffset,
+                yoffset: p_yoffset,
+                font: {
+                    size: p_size,
+                    family: p_family,
+                    weight: p_weight
+                }
+            };
+        };
+        function changedate(ud) {
+            var request = new XMLHttpRequest()
+            today.setDate(today.getDate() + ud);
+            todayY = today.getFullYear();
+            todayM = (today.getMonth() + 1 + 100).toString().substring(1, 3);
+            todayD = (today.getDate() + 100).toString().substring(1, 3)
+            todaytxt = todayY + todayM + todayD
+            if (checkday === todaytxt) {
+                alert('已是最新資料')
+                today = new Date();
+            }
+            else {
+                map.layers.removeAll();
+                document.getElementById("date1").innerText = '目前資料日期：' + todaytxt
                 request.open('get', 'https://kiang.github.io/2019-nCoV/data/points/' + todaytxt + '.json', true);
                 request.send();
-                request.onload = reqOnload; 
-                request.onerror = reqError;
-                function reqOnload() {
-                    obj = JSON.parse(this.responseText);
-                    gjfeadatas = obj.features;
-                    fid = 0;
-                    require(["esri/Graphic",
-                        "esri/symbols/PointSymbol3D",
-                        "esri/symbols/ObjectSymbol3DLayer",
-                        "esri/layers/GraphicsLayer",
-                        "esri/geometry/SpatialReference"], function (Graphic, PointSymbol3D, ObjectSymbol3DLayer, GraphicsLayer, SpatialReference) {
+                request.onload = reqOnload;
+            }
+            function reqOnload() {
+                obj = JSON.parse(this.responseText);
+                gjfeadatas = obj.features;
+                fid = 0;
+                require(["esri/Graphic",
+                    "esri/symbols/PointSymbol3D",
+                    "esri/symbols/ObjectSymbol3DLayer",
+                    "esri/layers/GraphicsLayer",
+                    "esri/geometry/SpatialReference"], function (Graphic, PointSymbol3D, ObjectSymbol3DLayer, GraphicsLayer, SpatialReference) {
                         var finfo = [];
                         finfo.push({ fieldName: "Country/Region", label: "國別" });
-                        finfo.push({ fieldName: "Province/State", label: "地區"});
-                        finfo.push({ fieldName: "Last Update", label: "最後更新"});
-                        finfo.push({ fieldName: "Confirmed", label: "確診"});
-                        finfo.push({ fieldName: "Deaths", label: "死亡"});
-                        finfo.push({ fieldName: "Recovered", label: "痊癒"});
+                        finfo.push({ fieldName: "Province/State", label: "地區" });
+                        finfo.push({ fieldName: "Last Update", label: "最後更新" });
+                        finfo.push({ fieldName: "Confirmed", label: "確診" });
+                        finfo.push({ fieldName: "Deaths", label: "死亡" });
+                        finfo.push({ fieldName: "Recovered", label: "痊癒" });
                         var template = {
                             title: "2019-nCoV",
                             position: "top-center",
@@ -136,7 +169,7 @@ view.camera = camera
                                 } else {
                                     ctx = fea.properties["Country/Region"]
                                 }
-                                var txtsymbol = GetTextSymbol(tempcolor, ctx + '\n' + fea.properties["Confirmed"] + "\n" + fea.properties["Deaths"] + "\n" + fea.properties["Recovered"], [25, 25, 25, 1], 1, 0, -3, 8, 'sans-serif', 'bold')
+                                var txtsymbol = GetTextSymbol(tempcolor, ctx + '\n' + fea.properties["Confirmed"] + "\n" + fea.properties["Deaths"] + "\n" + fea.properties["Recovered"], [20, 20, 20, 1], 1, 0, -3, 8, 'sans-serif', 'bold')
                                 geotypeT = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], z: (Math.sqrt(fea.properties["Confirmed"] * 12345678) + 9000) * 0.8, spatialReference: new SpatialReference(4326) };
                                 pGraphicT = new Graphic({
                                     geometry: geotypeT,
@@ -149,155 +182,6 @@ view.camera = camera
                         map.add(GraLyr);
                         map.add(GraLyrT);
                     });
-                }
-                function reqError(err) {
-                    console.log('原頭資料錯誤，請確認', err)
-                }
-            })
-        });
-        function GetTextSymbol(p_color, p_text, p_halocolor, p_halosize, p_xoffset, p_yoffset, p_size, p_family, p_weight) {
-            return {
-                type: 'text',
-                color: p_color,
-                text: p_text,
-                haloColor: p_halocolor,
-                haloSize: p_halosize,
-                xoffset: p_xoffset,
-                yoffset: p_yoffset,
-                font: {
-                    size: p_size,
-                    family: p_family,
-                    weight: p_weight
-                }
-            };
-        };
-        function changedate(ud) {
-            var request = new XMLHttpRequest()
-            today.setDate(today.getDate() + ud);
-            var checkd = new Date();
-            if (checkd.getDate() === today.getDate() - 1 && checkd.getMonth() === today.getMonth()) {
-                alert("已是最新資料")
-            }
-            else {
-                map.layers.removeAll();
-                var todaytxt
-                if (today.getDate() < 11) {
-                    todaytxt = today.getFullYear() + '0' + (today.getMonth() + 1) + '0' + (today.getDate() - 1)
-                }
-                else {
-                    todaytxt = today.getFullYear() + '0' + (today.getMonth() + 1) + (today.getDate() - 1)
-                }
-                document.getElementById("date1").innerText = '目前資料日期：' + todaytxt
-                request.open('get', 'https://kiang.github.io/2019-nCoV/data/points/' + todaytxt + '.json', true);
-                request.send();
-                request.onload = reqOnload;
-                request.onerror = reqError;
-                function reqOnload() {
-                    obj = JSON.parse(this.responseText);
-                    gjfeadatas = obj.features;
-                    fid = 0;
-                    require(["esri/Graphic",
-                        "esri/symbols/PointSymbol3D",
-                        "esri/symbols/ObjectSymbol3DLayer",
-                        "esri/layers/GraphicsLayer",
-                        "esri/geometry/SpatialReference"], function (Graphic, PointSymbol3D, ObjectSymbol3DLayer, GraphicsLayer, SpatialReference) {
-                            var finfo = [];
-                            finfo.push({ fieldName: "Country/Region", label: "國別" });
-                            finfo.push({ fieldName: "Province/State", label: "地區" });
-                            finfo.push({ fieldName: "Last Update", label: "最後更新" });
-                            finfo.push({ fieldName: "Confirmed", label: "確診" });
-                            finfo.push({ fieldName: "Deaths", label: "死亡" });
-                            finfo.push({ fieldName: "Recovered", label: "痊癒" });
-                            var template = {
-                                title: "2019-nCoV",
-                                position: "top-center",
-                                content: [{
-                                    type: "fields",
-                                    fieldInfos: finfo
-                                }],
-                            };
-                            var GraLyr = new GraphicsLayer();
-                            GraLyr.title = "疫情地圖-2019-nCoV";
-                            var GraLyrT = new GraphicsLayer();
-                            GraLyrT.title = "疫情地圖-TEXT";
-                            gjfeadatas.forEach(function (fea, key) {
-                                fid = fid + 1;
-                                var geotype;
-                                var geotypeT;
-                                var pGraphic
-                                var pGraphicT
-                                if (fea.properties["Confirmed"] < 10) {
-                                    tempcolor = "#1260EE"
-                                }
-                                else if (fea.properties["Confirmed"] < 50) {
-                                    tempcolor = "#11D1D9"
-                                }
-                                else if (fea.properties["Confirmed"] < 200) {
-                                    tempcolor = "#06E9A0"
-                                }
-                                else if (fea.properties["Confirmed"] < 600) {
-                                    tempcolor = "#FFD166"
-                                }
-                                else if (fea.properties["Confirmed"] < 1200) {
-                                    tempcolor = "#FF703B"
-                                }
-                                else if (fea.properties["Confirmed"] >= 1200) {
-                                    tempcolor = "#FF3B4C"
-                                }
-                                if (fea.geometry.type === "Point") {
-                                    geotype = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], spatialReference: new SpatialReference(4326) };
-                                    var objectSymbol = new PointSymbol3D({
-                                        symbolLayers: [new ObjectSymbol3DLayer({
-                                            width: 43210 + fea.properties["Confirmed"] * 2,
-                                            height: (Math.sqrt(fea.properties["Confirmed"] * 12345678) + 9000)*0.8,
-                                            resource: {
-                                                primitive: "cone" //inverted-cone cylinder
-                                            },
-                                            material: {
-                                                color: tempcolor
-                                            }
-                                        })]
-                                    });
-                                    pGraphic = new Graphic({
-                                        geometry: geotype,
-                                        symbol: objectSymbol
-                                    });
-                                    pGraphic.setAttribute("ObjectID", fid)
-                                    pGraphic.setAttribute("Province/State", fea.properties["Province/State"])
-                                    pGraphic.setAttribute("Country/Region", fea.properties["Country/Region"])
-                                    pGraphic.setAttribute("Last Update", fea.properties["Last Update"])
-                                    pGraphic.setAttribute("Confirmed", fea.properties["Confirmed"])
-                                    pGraphic.setAttribute("Deaths", fea.properties["Deaths"])
-                                    pGraphic.setAttribute("Recovered", fea.properties["Recovered"])
-                                    pGraphic.popupTemplate = template;
-                                    GraLyr.add(pGraphic);
-                                    var ctx = ""
-                                    if (fea.properties["Country/Region"] === fea.properties["Province/State"]) {
-                                        ctx = fea.properties["Country/Region"]
-                                    } else if (fea.properties["Country/Region"] === "China") {
-                                        ctx = fea.properties["Province/State"]
-                                    } else if (fea.properties["Country/Region"] === "US") {
-                                        ctx = fea.properties["Province/State"]
-                                    } else {
-                                        ctx = fea.properties["Country/Region"]
-                                    }
-                                    var txtsymbol = GetTextSymbol(tempcolor, ctx + '\n' + fea.properties["Confirmed"] + "\n" + fea.properties["Deaths"] + "\n" + fea.properties["Recovered"], [20, 20, 20, 1], 1, 0, -3, 8, 'sans-serif', 'bold')
-                                    geotypeT = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], z: (Math.sqrt(fea.properties["Confirmed"] * 12345678) + 9000) * 0.8, spatialReference: new SpatialReference(4326) };
-                                    pGraphicT = new Graphic({
-                                        geometry: geotypeT,
-                                        symbol: txtsymbol
-                                    });
-                                    GraLyrT.add(pGraphicT);
-                                }
-                            });
-                            GraLyr.opacity = 0.7
-                            map.add(GraLyr);
-                            map.add(GraLyrT);
-                        });
-                }
-                function reqError(err) {
-                    console.log('源頭資料錯誤，請確認', err)
-                }
             }
         }
     </script>
