@@ -46,7 +46,8 @@
             document.getElementById("date1").innerText = '目前資料日期：' + todaytxt
             view.when(function () {
                 changedate(-1)
-                document.getElementById("note1").innerText = '3組數據是確診/死亡/痊癒，這是一個arcgis JS api練習，數據借用了https://kiang.github.io/2019-nCoV/，切換日期可看總量累積，近3日趨勢可看漲跌%'
+                view.camera.tilt=20
+                document.getElementById("note1").innerText = '3組數據是確診/死亡/痊癒，本站由Arcgis JS API製作，數據借用了https://kiang.github.io/2019-nCoV/，切換日期可看總量累積，近3日成長可看上漲%'
             })
         });
         function GetTextSymbol(p_color, p_text, p_halocolor, p_halosize, p_xoffset, p_yoffset, p_size, p_family, p_weight) {
@@ -273,19 +274,7 @@
                             }
                             if (fea.geometry.type === "Point") {
                                 geotype = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], spatialReference: new SpatialReference(4326) };
-                                var ctx = ""
-                                if (fea.properties["Country/Region"] === fea.properties["Province/State"]) {
-                                    ctx = fea.properties["Country/Region"]
-                                } else if (fea.properties["Country/Region"] === "China") {
-                                    ctx = fea.properties["Province/State"]
-                                } else if (fea.properties["Country/Region"] === "US") {
-                                    ctx = fea.properties["Province/State"]
-                                } else if (fea.properties["Country/Region"] === "Australia") {
-                                    ctx = fea.properties["Province/State"]
-                                } else {
-                                    ctx = fea.properties["Country/Region"]
-                                }
-                                var txtsymbol = GetTextSymbol(tempcolor, "　　　　" + '\n　　　　+' + fea.properties["Confirmed"] + "%\n　　　　+" + fea.properties["Deaths"] + "%\n　　　　+" + fea.properties["Recovered"] + "%", [20, 20, 20, 1], 1, 20, -3, 8.5, 'sans-serif', 'bold')
+                                var txtsymbol = GetTextSymbol(tempcolor, "　　　　　" + '\n　　　　　+' + fea.properties["Confirmed"] + "%\n　　　　　+" + fea.properties["Deaths"] + "%\n　　　　　+" + fea.properties["Recovered"] + "%", [20, 20, 20, 1], 1, 20, -3, 8.5, 'sans-serif', 'bold')
                                 geotypeT = { type: "point", x: fea.geometry.coordinates[0], y: fea.geometry.coordinates[1], z: (Math.sqrt(fea.properties["Last Update"] * 12345678) + 9000) * 0.8, spatialReference: new SpatialReference(4326) };
                                 pGraphicT = new Graphic({
                                     geometry: geotypeT,
