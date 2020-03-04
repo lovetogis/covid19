@@ -39,14 +39,12 @@
             view = new SceneView({
                 container: "viewDiv",
                 map: map,
-                scale: 32100000,
-                center: [121, 25]
+                camera: {position: [121, 20, 500000], tilt:30, heading: 95}
             });
             view.ui.components = ["zoom", "compass"];
             document.getElementById("date1").innerText = '目前日期：' + todaytxt
             view.when(function () {
                 changedate(-1)
-                view.camera.tilt=20
                 document.getElementById("note1").innerText = '3組數據是確診/死亡/痊癒，每日8點統計前日總量，切換日期可看累積量，近3日成長為上漲趨勢。'
             })
         });
